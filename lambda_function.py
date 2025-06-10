@@ -29,21 +29,6 @@ def lambda_handler(event, context):
     Returns:
         dict: ผลลัพธ์การทำงาน
     """
-    # ตรวจสอบค่า configuration
-    try:
-        validate_config()
-    except Exception as e:
-        error_message = str(e)
-        logger.print(f"เกิดข้อผิดพลาด: {error_message}")
-        logger.send_to_discord(['400624061925031946'])
-        return {
-            'statusCode': 500,
-            'body': json.dumps({
-                'success': False,
-                'message': f'เกิดข้อผิดพลาด: {error_message}'
-            })
-        }
-
     headers = event.get("headers") or {}
     provided_api_key = headers.get("x-api-key")
 
@@ -55,8 +40,11 @@ def lambda_handler(event, context):
     
     # สร้าง logger
     logger = Logger()
-    
+
     try:
+        # ตรวจสอบค่า configuration
+        validate_config()
+
         # รับข้อมูลจาก Google Sheets
         values = get_sheet_data()
         

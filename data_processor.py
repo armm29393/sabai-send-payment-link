@@ -7,6 +7,7 @@ from config import (
     EMAIL
 )
 from notification import send_notification
+from sheets_service import update_sheet_row
 import time
 
 def find_column_indices(headers):

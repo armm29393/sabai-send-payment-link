@@ -5,17 +5,10 @@ import json
 
 from config import (
     validate_config,
-    X_API_KEY,
-    IS_GEN_PAYMENT_LINK, 
-    IS_SEND_NOTI, 
-    PAYMENT_LINK,
-    LAND_NO,
-    PHONE,
-    EMAIL
+    X_API_KEY
 )
 from logger import Logger, load_discord_user_ids
-from sheets_service import get_sheet_data, update_sheet_row
-from notification import send_notification
+from sheets_service import get_sheet_data
 from data_processor import process_sheet_data
 
 def lambda_handler(event, context):

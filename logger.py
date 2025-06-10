@@ -3,6 +3,7 @@
 
 import json
 import requests
+import pytz
 from datetime import datetime
 from config import DISCORD_WEBHOOK_URL
 
@@ -25,10 +26,12 @@ class Logger:
         # แบ่งข้อความถ้ายาวเกิน 2000 ตัวอักษร (ข้อจำกัดของ Discord)
         chunks = [log_text[i:i+1900] for i in range(0, len(log_text), 1900)]
         
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # รับเวลาปัจจุบันในรูปแบบ timezone ของไทย
+        thai_tz = pytz.timezone('Asia/Bangkok')
+        timestamp = datetime.now(thai_tz).strftime("%Y-%m-%d %H:%M:%S")
         
         # ส่งข้อความแรกพร้อมกับ log
-        first_message = f"**Payment Link Notification Log - {timestamp}**\n```\n{chunks[0]}\n```"
+        first_message = f"**SABAI Payment Link Notification Log - {timestamp}**\n```\n{chunks[0]}\n```"
         payload = {"content": first_message}
         try:
             response = requests.post(DISCORD_WEBHOOK_URL, json=payload)

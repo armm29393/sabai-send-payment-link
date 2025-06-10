@@ -1,10 +1,13 @@
 # lambda_function.py
 # ฟังก์ชันหลักสำหรับ AWS Lambda
 
+import json
 import time
 from datetime import datetime
 
 from config import (
+    validate_config,
+    X_API_KEY,
     IS_GEN_PAYMENT_LINK, 
     IS_SEND_NOTI, 
     PAYMENT_LINK,
@@ -107,7 +110,8 @@ def process_sheet_data(values, logger):
                 "data": row.copy()  # ใช้ copy เพื่อไม่ให้กระทบข้อมูลเดิม
             })
     
-    sent_noti = 0
+    noti_success = 0
+    noti_failed = 0
     
     # อัพเดตข้อมูลใน spreadsheet
     for row_data in rows_to_update:
@@ -118,7 +122,7 @@ def process_sheet_data(values, logger):
         result = send_notification(data, indices)
         
         if result['success']:
-            logger.print(f"ส่งการแจ้งเตือนสำเร็จสำหรับแถวที่ {row_num}")
+            print(f"ส่งการแจ้งเตือนสำเร็จสำหรับแถวที่ {row_num}")
             
             # ตรวจสอบว่าต้องเพิ่มคอลัมน์ is Send Noti หรือไม่
             if len(data) <= indices['is_send_noti']:
@@ -130,20 +134,20 @@ def process_sheet_data(values, logger):
                 data[indices['is_send_noti']] = "Done"
             
             # อัพเดตข้อมูลใน spreadsheet
-            logger.print(f"กำลังอัพเดตข้อมูลในแถวที่ {row_num} - เปลี่ยน is Send Noti เป็น Done")
+            print(f"กำลังอัพเดตข้อมูลในแถวที่ {row_num} - เปลี่ยน is Send Noti เป็น Done")
             update_sheet_row(row_num, data)
-            logger.print(f"อัพเดตข้อมูลในแถวที่ {row_num} เรียบร้อยแล้ว")
-            sent_noti += 1
+            print(f"อัพเดตข้อมูลในแถวที่ {row_num} เรียบร้อยแล้ว")
+            noti_success += 1
         else:
-            logger.print(f"ส่งการแจ้งเตือนไม่สำเร็จสำหรับแถวที่ {row_num}")
+            logger.print(f"ส่งการแจ้งเตือนไม่สำเร็จสำหรับแปลง {data[indices['land_no']] if indices['land_no'] != -1 else 'ไม่ระบุ'} (แถว {row_num})")
             logger.print(f"Error: {result.get('error', 'Unknown error')}")
-        
-        logger.print("-" * 30)
-        
+            logger.print("-" * 30)
+            noti_failed += 1
+
         # หน่วงเวลาเล็กน้อยเพื่อไม่ให้ยิง API ถี่เกินไป
         time.sleep(1)
-    
-    return sent_noti, len(rows_to_update) > 0
+
+    return noti_success, noti_failed, len(rows_to_update) > 0
 
 def lambda_handler(event, context):
     """
@@ -156,6 +160,21 @@ def lambda_handler(event, context):
     Returns:
         dict: ผลลัพธ์การทำงาน
     """
+    # ตรวจสอบค่า configuration
+    try:
+        validate_config()
+    except ValueError as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'success': False, 'message': f'Configuration error: {str(e)}'})
+        }
+
+    headers = event.get("headers") or {}
+    provided_api_key = headers.get("x-api-key")
+
+    if provided_api_key != X_API_KEY:
+        return {"statusCode": 403, "body": json.dumps({"success": False, "message": "Invalid API key"})}
+    
     # โหลด Discord user IDs
     discord_user_ids = load_discord_user_ids()
     
@@ -163,18 +182,15 @@ def lambda_handler(event, context):
     logger = Logger()
     
     try:
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        logger.print(f"**SABAI Payment Link Notification Log - {timestamp}**")
-        
         # รับข้อมูลจาก Google Sheets
         values = get_sheet_data()
         
         # ประมวลผลข้อมูล
-        sent_noti, has_updates = process_sheet_data(values, logger)
-        
+        noti_success, noti_failed, has_updates = process_sheet_data(values, logger)
+
         # แท็กผู้ใช้เฉพาะเมื่อมีการอัพเดตข้อมูล
         if has_updates:
-            logger.print(f"ส่งโนติฯ Payment Link สำเร็จ {sent_noti} รายการ")
+            logger.print(f"ส่งโนติฯ Payment Link สำเร็จ {noti_success} รายการ, ล้มเหลว {noti_failed} รายการ")
             logger.send_to_discord(discord_user_ids)
         else:
             logger.print("ไม่พบข้อมูลที่ต้องส่งโนติฯ")
@@ -182,17 +198,22 @@ def lambda_handler(event, context):
         
         return {
             'statusCode': 200,
-            'body': f'ส่งโนติฯ Payment Link สำเร็จ {sent_noti} รายการ'
+            'body': json.dumps({
+                'success': True,
+                'message': f'ส่งโนติฯ Payment Link สำเร็จ {noti_success} รายการ, ล้มเหลว {noti_failed} รายการ',
+            })
         }
     
     except Exception as e:
         error_message = str(e)
         logger.print(f"เกิดข้อผิดพลาด: {error_message}")
-        logger.send_to_discord(discord_user_ids)
-        
+        logger.send_to_discord(['400624061925031946'])
         return {
             'statusCode': 500,
-            'body': f'เกิดข้อผิดพลาด: {error_message}'
+            'body': json.dumps({
+                'success': False,
+                'message': f'เกิดข้อผิดพลาด: {error_message}'
+            })
         }
 
 # สำหรับการทดสอบในเครื่อง local

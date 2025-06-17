@@ -4,11 +4,14 @@ from config import (
     PAYMENT_LINK,
     LAND_NO,
     PHONE,
-    EMAIL
+    EMAIL,
+    TIMESTAMP
 )
+from datetime import datetime
 from notification import send_notification
 from sheets_service import update_sheet_row
 import time
+import pytz
 
 def find_column_indices(headers):
     """
@@ -30,14 +33,15 @@ def find_column_indices(headers):
     }
     
     for i, header in enumerate(headers):
-        if header == PAYMENT_LINK:
+        if header == TIMESTAMP:
+            indices['timestamp'] = i
+        elif header == PAYMENT_LINK:
             indices['payment_link'] = i
         elif header == IS_GEN_PAYMENT_LINK:
             indices['is_gen_payment_link'] = i
         elif header == IS_SEND_NOTI:
             indices['is_send_noti'] = i
         elif header == LAND_NO:
-            # lambda_function.py (ต่อ)
             indices['land_no'] = i
         elif header == PHONE:
             indices['phone'] = i
@@ -57,6 +61,7 @@ def process_sheet_data(values, logger):
     Returns:
         tuple: (จำนวนการแจ้งเตือนที่ส่งสำเร็จ, มีการอัพเดตข้อมูลหรือไม่)
     """
+    thai_tz = pytz.timezone('Asia/Bangkok')
     # ดึงข้อมูลส่วนหัวจากแถวแรก
     headers = values[0]
     
@@ -123,7 +128,17 @@ def process_sheet_data(values, logger):
                 data.append("Done")
             else:
                 data[indices['is_send_noti']] = "Done"
-            
+
+            # update timestamp
+            timestamp = datetime.now(thai_tz).strftime("%Y-%m-%d %H:%M:%S")
+            if len(data) <= indices['timestamp']:
+                # เพิ่มคอลัมน์ที่ว่างจนถึง timestamp
+                while len(data) < indices['timestamp']:
+                    data.append("")
+                data.append(timestamp)
+            else:
+                data[indices['timestamp']] = timestamp
+
             # อัพเดตข้อมูลใน spreadsheet
             print(f"กำลังอัพเดตข้อมูลในแถวที่ {row_num} - เปลี่ยน is Send Noti เป็น Done")
             update_sheet_row(row_num, data)

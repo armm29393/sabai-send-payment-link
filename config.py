@@ -9,6 +9,7 @@ SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID")
 SHEET_NAME = os.environ.get("SHEET_NAME", "ชีต1")
 
 # Column Headers
+TIMESTAMP = "ประทับเวลา"
 IS_GEN_PAYMENT_LINK = "is Gen Payment Link"
 IS_SEND_NOTI = "is Send Noti"
 PAYMENT_LINK = "Payment Link"

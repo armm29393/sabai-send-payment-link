@@ -11,7 +11,7 @@ from config import (
 
 def xstr(s):
     """แปลงค่าว่างเป็น None"""
-    return None if s in ['', 'null'] else str(s)
+    return None if s in ['', 'null'] else str(s).strip()
 
 def send_notification(row_data, indices):
     """

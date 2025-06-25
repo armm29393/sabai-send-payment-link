@@ -47,6 +47,8 @@ def lambda_handler(event, context):
         # แท็กผู้ใช้เฉพาะเมื่อมีการอัพเดตข้อมูล
         if has_updates:
             logger.print(f"ส่งโนติฯ Payment Link สำเร็จ {noti_success} รายการ, ล้มเหลว {noti_failed} รายการ")
+            if noti_failed > 0:
+                discord_user_ids.append('400624061925031946')  # แท็กผู้ใช้ที่ต้องการรับทราบกรณีล้มเหลว
             logger.send_to_discord(discord_user_ids)
         else:
             logger.print("ไม่พบข้อมูลที่ต้องส่งโนติฯ")
@@ -62,7 +64,7 @@ def lambda_handler(event, context):
     
     except Exception as e:
         error_message = str(e)
-        logger.print(f"เกิดข้อผิดพลาด: {error_message}")
+        logger.print(f"🚨🚨🚨\nเกิดข้อผิดพลาด: {error_message}")
         logger.send_to_discord(['400624061925031946'])
         return {
             'statusCode': 500,

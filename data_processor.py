@@ -12,6 +12,7 @@ from notification import send_notification
 from sheets_service import update_sheet_row
 import time
 import pytz
+import json
 
 def find_column_indices(headers):
     """
@@ -149,6 +150,38 @@ def process_sheet_data(values, logger):
             logger.print(f"Error: {result.get('error', 'Unknown error')}")
             logger.print("-" * 30)
             noti_failed += 1
+            
+            prettyErr = False
+            # ดึงข้อความ error จาก response
+            error_message = "Unknown error"
+            error_detail = result.get('error', '')
+            
+            # ตรวจสอบว่า error เป็น JSON หรือไม่
+            try:
+                if not prettyErr and isinstance(error_detail, str) and error_detail.startswith('{'):
+                    err = json.loads(error_detail)
+                    errStr = json.dumps(err, indent=4, ensure_ascii=False)
+                    error_message = errStr
+                else:
+                    if isinstance(error_detail, str):
+                        error_json = json.loads(error_detail)
+                        if 'message' in error_json:
+                            error_message = error_json['message']
+                        elif 'error' in error_json and 'detail' in error_json['error']:
+                            error_message = error_json['error']['detail']
+                    elif isinstance(error_detail, dict) and 'message' in error_detail:
+                        error_message = error_detail['message']
+            except json.JSONDecodeError:
+                # ถ้าไม่ใช่ JSON ให้ใช้ HTTP status code
+                error_message = f"HTTP Error: {result.get('status_code', 'Unknown')}"
+
+            # เพิ่ม error message เป็นคอลัมน์สุดท้าย
+            data.append(error_message)
+            
+            # อัพเดตข้อมูลใน spreadsheet พร้อม error message
+            print(f"กำลังอัพเดตข้อมูลในแถวที่ {row_num} - เพิ่ม error message")
+            update_sheet_row(row_num, data)
+            print(f"อัพเดตข้อมูลในแถวที่ {row_num} เรียบร้อยแล้ว")
 
         # หน่วงเวลาเล็กน้อยเพื่อไม่ให้ยิง API ถี่เกินไป
         time.sleep(1)

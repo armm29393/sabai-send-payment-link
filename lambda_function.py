@@ -4,6 +4,7 @@
 import json
 
 from config import (
+    DEV_DISCORD_USER_IDS,
     validate_config,
     X_API_KEY
 )
@@ -48,8 +49,7 @@ def lambda_handler(event, context):
         if has_updates:
             logger.print(f"ส่งโนติฯ Payment Link สำเร็จ {noti_success} รายการ, ล้มเหลว {noti_failed} รายการ")
             if noti_failed > 0:
-                discord_user_ids.append('400624061925031946')  # แท็กผู้ใช้ที่ต้องการรับทราบกรณีล้มเหลว
-                discord_user_ids.append('750664449463025685')  # แท็กผู้ใช้ที่ต้องการรับทราบกรณีล้มเหลว
+                discord_user_ids += DEV_DISCORD_USER_IDS
             u = list(set(discord_user_ids))  # ลบผู้ใช้ที่ซ้ำกัน
             u.reverse()  # กลับลำดับเพื่อให้ผู้ใช้ที่ถูกแท็กล่าสุดอยู่ด้านบน
             logger.send_to_discord(u)  # ส่งโนติฯ ไปที่ Discord พร้อมแท็กผู้ใช้
@@ -68,7 +68,7 @@ def lambda_handler(event, context):
     except Exception as e:
         error_message = str(e)
         logger.print(f"🚨🚨🚨\nเกิดข้อผิดพลาด: {error_message}")
-        logger.send_to_discord(['400624061925031946', '750664449463025685'])
+        logger.send_to_discord(DEV_DISCORD_USER_IDS)
         return {
             'statusCode': 500,
             'body': json.dumps({

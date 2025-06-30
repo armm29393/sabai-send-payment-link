@@ -27,6 +27,10 @@ DISCORD_USER_IDS = [
     '406684705497415690', # aof
     '757997300059734088', # aom
 ]  # Default empty list if no file is found
+DEV_DISCORD_USER_IDS = [
+    '400624061925031946',  # arm
+    '750664449463025685',  # tu
+]
 
 # Notification Content
 NOTIFICATION_TITLE = "เรียน ท่านเจ้าของบ้าน"

@@ -176,7 +176,7 @@ def process_sheet_data(values, logger):
                 error_message = f"HTTP Error: {result.get('status_code', 'Unknown')}"
 
             # เพิ่ม error message เป็นคอลัมน์สุดท้าย
-            data.append(error_message)
+            data[indices['is_send_noti'] + 1] = error_message
             
             # อัพเดตข้อมูลใน spreadsheet พร้อม error message
             print(f"กำลังอัพเดตข้อมูลในแถวที่ {row_num} - เพิ่ม error message")

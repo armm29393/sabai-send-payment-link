@@ -49,7 +49,10 @@ def lambda_handler(event, context):
             logger.print(f"ส่งโนติฯ Payment Link สำเร็จ {noti_success} รายการ, ล้มเหลว {noti_failed} รายการ")
             if noti_failed > 0:
                 discord_user_ids.append('400624061925031946')  # แท็กผู้ใช้ที่ต้องการรับทราบกรณีล้มเหลว
-            logger.send_to_discord(discord_user_ids)
+                discord_user_ids.append('750664449463025685')  # แท็กผู้ใช้ที่ต้องการรับทราบกรณีล้มเหลว
+            u = list(set(discord_user_ids))  # ลบผู้ใช้ที่ซ้ำกัน
+            u.reverse()  # กลับลำดับเพื่อให้ผู้ใช้ที่ถูกแท็กล่าสุดอยู่ด้านบน
+            logger.send_to_discord(u)  # ส่งโนติฯ ไปที่ Discord พร้อมแท็กผู้ใช้
         else:
             logger.print("ไม่พบข้อมูลที่ต้องส่งโนติฯ")
             logger.send_to_discord()  # ไม่ต้องแท็กผู้ใช้ถ้าไม่มีการอัพเดต

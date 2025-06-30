@@ -68,7 +68,7 @@ def lambda_handler(event, context):
     except Exception as e:
         error_message = str(e)
         logger.print(f"🚨🚨🚨\nเกิดข้อผิดพลาด: {error_message}")
-        logger.send_to_discord(['400624061925031946'])
+        logger.send_to_discord(['400624061925031946', '750664449463025685'])
         return {
             'statusCode': 500,
             'body': json.dumps({

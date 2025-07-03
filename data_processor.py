@@ -1,4 +1,5 @@
 from config import (
+    ERROR_RES,
     IS_GEN_PAYMENT_LINK, 
     IS_SEND_NOTI, 
     PAYMENT_LINK,
@@ -48,6 +49,8 @@ def find_column_indices(headers):
             indices['phone'] = i
         elif header == EMAIL:
             indices['email'] = i
+        elif header == ERROR_RES:
+            indices['error'] = i
     
     return indices
 
@@ -95,7 +98,7 @@ def process_sheet_data(values, logger):
             # แสดงข้อมูลของแถวที่เข้าเงื่อนไข
             for j in range(min(len(headers), len(row))):
                 # ข้ามคอลัมน์ที่ไม่ต้องการแสดง
-                if headers[j] in [PAYMENT_LINK, IS_GEN_PAYMENT_LINK, IS_SEND_NOTI, PHONE, EMAIL]:
+                if headers[j] in [PAYMENT_LINK, IS_GEN_PAYMENT_LINK, IS_SEND_NOTI, TIMESTAMP]:
                     continue
                 logger.print(f"{headers[j]}: {row[j]}")
             
@@ -176,8 +179,14 @@ def process_sheet_data(values, logger):
                 error_message = f"HTTP Error: {result.get('status_code', 'Unknown')}"
 
             # เพิ่ม error message เป็นคอลัมน์สุดท้าย
-            data[indices['is_send_noti'] + 1] = error_message
-            
+            if len(data) <= indices['error']:
+                # เพิ่มคอลัมน์ที่ว่างจนถึง error
+                while len(data) < indices['error']:
+                    data.append("")
+                data.append(error_message)
+            else:
+                data[indices['error']] = error_message
+
             # อัพเดตข้อมูลใน spreadsheet พร้อม error message
             print(f"กำลังอัพเดตข้อมูลในแถวที่ {row_num} - เพิ่ม error message")
             update_sheet_row(row_num, data)

@@ -49,10 +49,9 @@ def lambda_handler(event, context):
         if has_updates:
             logger.print(f"ส่งโนติฯ Payment Link สำเร็จ {noti_success} รายการ, ล้มเหลว {noti_failed} รายการ")
             if noti_failed > 0:
-                discord_user_ids += DEV_DISCORD_USER_IDS
-            u = list(set(discord_user_ids))  # ลบผู้ใช้ที่ซ้ำกัน
-            u.reverse()  # กลับลำดับเพื่อให้ผู้ใช้ที่ถูกแท็กล่าสุดอยู่ด้านบน
-            logger.send_to_discord(u)  # ส่งโนติฯ ไปที่ Discord พร้อมแท็กผู้ใช้
+                logger.send_to_discord(discord_user_ids + DEV_DISCORD_USER_IDS)  # ส่งโนติฯ ไปที่ Discord พร้อมแท็กผู้ใช้
+            else:
+                logger.send_to_discord(discord_user_ids)  # ส่งโนติฯ ไปที่ Discord พร้อมแท็กผู้ใช้
         else:
             logger.print("ไม่พบข้อมูลที่ต้องส่งโนติฯ")
             logger.send_to_discord()  # ไม่ต้องแท็กผู้ใช้ถ้าไม่มีการอัพเดต

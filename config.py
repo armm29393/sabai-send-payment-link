@@ -16,6 +16,7 @@ PAYMENT_LINK = "Payment Link"
 LAND_NO = "หมายเลขแปลง ตัวอย่างเช่น 1099-001"
 PHONE = "เบอร์โทรศัพท์"
 EMAIL = "อีเมล์"
+ERROR_RES = "Error"
 
 # SABAI API
 SABAI_API_URL = os.environ.get("SABAI_API_URL")

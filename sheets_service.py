@@ -84,24 +84,42 @@ def get_sheet_data():
 
 def update_sheet_row(row_num, data):
     """อัพเดตข้อมูลใน Google Sheets"""
+    import traceback
     try:
+        print(f"[update_sheet_row] กำลังอัพเดตแถวที่ {row_num}, จำนวนข้อมูล: {len(data)} คอลัมน์")
+        print(f"[update_sheet_row] ข้อมูล: {data}")
+        
         service = get_sheet_service()
         sheet = service.spreadsheets()
         
-        update_range = f"{SHEET_NAME}!A{row_num}:{chr(65 + len(data) - 1)}{row_num}"
+        # ตรวจสอบว่าข้อมูลไม่ว่าง
+        if not data:
+            raise Exception("ข้อมูลที่จะอัพเดตเป็นรายการว่าง")
+        
+        # คำนวณ range สำหรับการอัพเดต
+        end_column = chr(65 + len(data) - 1)  # A=65, B=66, etc.
+        update_range = f"{SHEET_NAME}!A{row_num}:{end_column}{row_num}"
+        
+        print(f"[update_sheet_row] Update range: {update_range}")
+        
         body = {"values": [data]}
         
-        sheet.values().update(
+        result = sheet.values().update(
             spreadsheetId=SPREADSHEET_ID,
             range=update_range,
             valueInputOption="RAW",
             body=body
         ).execute()
         
+        print(f"[update_sheet_row] อัพเดตสำเร็จ: {result.get('updatedCells', 0)} เซลล์")
         return True
+        
     except HttpError as err:
-        print(f"Google API error: {err}")
+        print(f"[update_sheet_row] Google API error: {err}")
+        print(f"[update_sheet_row] Stack trace: {traceback.format_exc()}")
         raise
     except Exception as e:
-        print(f"Error updating sheet: {e}")
+        print(f"[update_sheet_row] Error updating sheet: {e}")
+        print(f"[update_sheet_row] Stack trace: {traceback.format_exc()}")
+        print(f"[update_sheet_row] Row: {row_num}, Data length: {len(data) if data else 0}")
         raise

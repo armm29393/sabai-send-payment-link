@@ -65,8 +65,11 @@ def lambda_handler(event, context):
         }
     
     except Exception as e:
+        import traceback
         error_message = str(e)
+        error_traceback = traceback.format_exc()
         logger.print(f"🚨🚨🚨\nเกิดข้อผิดพลาด: {error_message}")
+        logger.print(f"Stack trace:\n{error_traceback}")
         logger.send_to_discord(DEV_DISCORD_USER_IDS)
         return {
             'statusCode': 500,

@@ -27,6 +27,7 @@ def send_notification(row_data, indices):
     import traceback
     
     try:
+        # ใช้ print เพื่อให้ debug logs ยังคงแสดงใน console
         print(f"[send_notification] เริ่มส่งการแจ้งเตือน")
         print(f"[send_notification] Row data length: {len(row_data)}")
         print(f"[send_notification] Indices: {indices}")

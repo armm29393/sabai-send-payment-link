@@ -8,15 +8,52 @@ from datetime import datetime
 from config import DISCORD_WEBHOOK_URL
 
 class Logger:
-    def __init__(self):
+    def __init__(self, verbose=False):
         self.logs = []
+        self.verbose = verbose
+        self.log_levels = {
+            'ERROR': 0,
+            'INFO': 1,
+            'DEBUG': 2
+        }
+    
+    def _log(self, message, level='INFO'):
+        """Internal logging method with level support"""
+        print(message)
+        log_entry = {
+            'message': str(message),
+            'level': level
+        }
+        self.logs.append(log_entry)
+    
+    def error(self, message):
+        """Log error messages (always sent to Discord)"""
+        self._log(f"❌ {message}", 'ERROR')
+    
+    def info(self, message):
+        """Log info messages (always sent to Discord)"""
+        self._log(f"ℹ️ {message}", 'INFO')
+    
+    def debug(self, message):
+        """Log debug messages (sent only in verbose mode)"""
+        self._log(f"🔍 {message}", 'DEBUG')
     
     def print(self, message):
-        print(message)
-        self.logs.append(str(message))
+        """Legacy method for backward compatibility"""
+        self.info(message)
     
     def get_log_text(self):
-        return "\n".join(self.logs)
+        """Get filtered log text based on verbose setting"""
+        if self.verbose:
+            # Verbose mode: return all logs
+            return "\n".join([log['message'] for log in self.logs])
+        else:
+            # Normal mode: return only ERROR and INFO logs
+            filtered_logs = [
+                log['message'] for log in self.logs 
+                if log['level'] in ['ERROR', 'INFO']
+            ]
+            return "\n".join(filtered_logs)
     
     def send_to_discord(self, user_ids=None):
         log_text = self.get_log_text()

@@ -86,6 +86,7 @@ def update_sheet_row(row_num, data):
     """อัพเดตข้อมูลใน Google Sheets"""
     import traceback
     try:
+        # ใช้ print เพื่อให้ debug logs ยังคงแสดงใน console
         print(f"[update_sheet_row] กำลังอัพเดตแถวที่ {row_num}, จำนวนข้อมูล: {len(data)} คอลัมน์")
         print(f"[update_sheet_row] ข้อมูล: {data}")
         

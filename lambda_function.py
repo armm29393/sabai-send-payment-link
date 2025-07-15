@@ -29,11 +29,26 @@ def lambda_handler(event, context):
     if provided_api_key != X_API_KEY:
         return {"statusCode": 403, "body": json.dumps({"success": False, "message": "Invalid API key"})}
     
+    # ตรวจสอบ verbose mode จาก headers หรือ query parameters
+    verbose_mode = False
+    if headers.get("verbose") == "true" or headers.get("Verbose") == "true":
+        verbose_mode = True
+    
+    # ตรวจสอบจาก query parameters ด้วย (สำหรับ GET requests)
+    query_params = event.get("queryStringParameters") or {}
+    if query_params.get("verbose") == "true":
+        verbose_mode = True
+    
     # โหลด Discord user IDs
     discord_user_ids = load_discord_user_ids()
     
-    # สร้าง logger
-    logger = Logger()
+    # สร้าง logger พร้อม verbose setting
+    logger = Logger(verbose=verbose_mode)
+    
+    if verbose_mode:
+        logger.debug("🔧 Verbose mode เปิดใช้งาน - จะแสดง log ทุกรายละเอียด")
+    else:
+        logger.debug("📝 Normal mode - จะแสดงเฉพาะ log ที่สำคัญ")
 
     try:
         # ตรวจสอบค่า configuration
